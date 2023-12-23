@@ -1,0 +1,131 @@
+using Caliburn.Micro;
+using OngekiFumenEditor.Base;
+using OngekiFumenEditor.Base.OngekiObjects;
+using OngekiFumenEditor.Modules.FumenVisualEditor.Base;
+using OngekiFumenEditor.Modules.FumenVisualEditor.Kernel;
+using OngekiFumenEditor.Utils;
+using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+using System.Diagnostics;
+using OngekiFumenEditor.Modules.EditorScriptExecutor.Scripts;
+using OngekiFumenEditor.Parser.DefaultImpl.Ogkr;
+//获取编辑器目标对象
+var targetEditor = ScriptArgs.TargetEditor;
+if (targetEditor is null)
+	return;
+
+var lines = File.ReadAllLines(@"F:\SDEZ_1.40\Package\Sinmai_Data\StreamingAssets\A000\music\music011452\011452_03.ma2");
+var cmdArgs = new CommandArgs();
+
+TGrid calcTGrid(int measure, int offset)
+{
+	return new TGrid(measure, offset * 5);
+}
+
+var genList = new List<OngekiObjectBase>();
+Debugger.Break();
+
+var curRollX = 0;
+XGrid getRollXGrid()
+{
+	var xGrid = new XGrid(18 + curRollX * 3, 0);
+	curRollX = (curRollX + 1) % 3;
+	return xGrid;
+}
+var prevStartTGrid = TGrid.MinValue;
+foreach (var line in lines)
+{
+	cmdArgs.Line = line;
+	TGrid getTGrid() => calcTGrid(cmdArgs.GetData<int>(1), cmdArgs.GetData<int>(2));
+
+	var ongekiObject = default(OngekiObjectBase);
+	var type = cmdArgs.GetData<string>(0).ToUpper();
+	if (type.Length != 5)
+		continue;
+	var isEx = type[1] == 'X';
+	var isBreak = type[0] == 'B';
+	if (type[2] == 'S' && type[2..5] != "STR")
+	{
+		var r = getTGrid();
+		if (r != prevStartTGrid)
+		{
+			var delay = cmdArgs.GetData<int>(4) * 5;
+			var duration = cmdArgs.GetData<int>(5) * 5;
+			var begin = getTGrid() + new GridOffset(0, 0);
+			var send = begin + new GridOffset(0, delay);
+			var to = send + new GridOffset(0, duration);
+
+			prevStartTGrid = r;
+			var hold = new Hold()
+			{
+				TGrid = begin,
+				XGrid = getRollXGrid(),
+				IsCritical = isBreak,
+			};
+
+			hold.SetHold(new HoldEnd()
+			{
+				TGrid = to,
+				XGrid = hold.XGrid.CopyNew()
+			});
+
+			genList.Add(new Flick()
+			{
+				TGrid = send,
+				XGrid = getRollXGrid(),
+			});
+			ongekiObject = hold;
+		}
+	}
+	switch (type[2..5])
+	{
+		case "TTP":
+		case "TAP":
+		case "STR":
+			ongekiObject = new Tap()
+			{
+				TGrid = getTGrid(),
+				XGrid = getRollXGrid(),
+				IsCritical = isBreak
+			};
+			break;
+		case "HLD":
+		case "THO":
+			var hold = new Hold()
+			{
+				TGrid = getTGrid(),
+				XGrid = getRollXGrid(),
+				IsCritical = isBreak
+			};
+			var duration = cmdArgs.GetData<int>(4) * 5;
+
+			hold.SetHold(new HoldEnd()
+			{
+				TGrid = hold.TGrid + new GridOffset(0, duration),
+				XGrid = hold.XGrid.CopyNew()
+			});
+
+			ongekiObject = hold;
+			break;
+		case "MET":
+		case "BPM":
+		default:
+			break;
+	}
+
+	if (ongekiObject != null)
+		genList.Add(ongekiObject);
+}
+
+Log.LogDebug("GOOD");
+
+
+targetEditor.UndoRedoManager.ExecuteAction(LambdaUndoAction.Create("[脚本]采音抄袭",
+	() =>
+	{
+		targetEditor.Fumen.AddObjects(genList);
+	}, () =>
+	{
+		targetEditor.Fumen.RemoveObjects(genList);
+	}));

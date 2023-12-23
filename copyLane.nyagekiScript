@@ -1,0 +1,81 @@
+using OngekiFumenEditor.Base;
+using OngekiFumenEditor.Base.OngekiObjects;
+using System.Linq;
+using OngekiFumenEditor.Base.OngekiObjects.Lane;
+using OngekiFumenEditor.Base.OngekiObjects.Wall;
+using OngekiFumenEditor.Base.OngekiObjects.ConnectableObject;
+using OngekiFumenEditor.Base.EditorObjects.LaneCurve;
+using OngekiFumenEditor.Utils;
+using OngekiFumenEditor.Modules.FumenVisualEditor.Base;
+using OngekiFumenEditor.Modules.EditorScriptExecutor.Scripts;
+using OngekiFumenEditor.Base.OngekiObjects.Lane.Base;
+using System.Collections.Generic;
+
+var xGridOffset = new GridOffset(12, 0);
+var tGridOffset = new GridOffset(0, 0);
+var genLaneType = LaneType.Right;
+
+//获取编辑器目标对象
+var targetEditor = ScriptArgs.TargetEditor;
+
+if (targetEditor is null)
+	return;
+
+var list = new List<ConnectableStartObject>();
+foreach (var sourceLaneStart in targetEditor.SelectObjects.OfType<ConnectableStartObject>().ToArray())
+{
+	ConnectableStartObject targetLaneStart = genLaneType switch
+	{
+		LaneType.Left => new LaneLeftStart(),
+		LaneType.Center => new LaneCenterStart(),
+		LaneType.Right => new LaneRightStart(),
+		LaneType.Colorful => new ColorfulLaneStart() { ColorId = (sourceLaneStart	as	ColorfulLaneStart).ColorId },
+		LaneType.Enemy => new EnemyLaneStart(),
+		LaneType.WallLeft => new WallLeftStart(),
+		LaneType.WallRight => new WallRightStart(),
+		_ => default
+	};
+
+	if (targetLaneStart is null)
+		return;
+
+	void CopyCommon(ConnectableObjectBase s, ConnectableObjectBase t)
+	{
+		t.TGrid = s.TGrid + tGridOffset;
+		t.XGrid = s.XGrid + xGridOffset;
+	}
+
+	void CopyChild(ConnectableChildObjectBase s, ConnectableChildObjectBase t)
+	{
+		CopyCommon(s, t);
+
+		t.CurveInterpolaterFactory = s.CurveInterpolaterFactory;
+		t.CurvePrecision = s.CurvePrecision;
+		foreach (var ctrl in s.PathControls)
+		{
+			var cp = (LaneCurvePathControlObject)ctrl.CopyNew();
+			cp.TGrid = cp.TGrid + tGridOffset;
+			cp.XGrid = cp.XGrid + xGridOffset;
+			t.AddControlObject(cp);
+		}
+	}
+
+	//generate and setup new lane.
+	CopyCommon(sourceLaneStart, targetLaneStart);
+	foreach (var child in sourceLaneStart.Children)
+	{
+		var cpChild = sourceLaneStart.CreateChildObject();
+		CopyChild(child, cpChild);
+		targetLaneStart.AddChildObject(cpChild);
+	}
+
+	list.Add(targetLaneStart);
+}
+
+targetEditor.UndoRedoManager.ExecuteAction(LambdaUndoAction.Create("[脚本]克隆轨道", () =>
+{
+	targetEditor.Fumen.AddObjects(list);
+}, () =>
+{
+	targetEditor.Fumen.RemoveObjects(list);
+}));
