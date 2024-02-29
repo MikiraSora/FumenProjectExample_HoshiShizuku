@@ -13,7 +13,7 @@
     "ForceMagneticDock": true,
     "JudgeLineAlignBeat": false,
     "AdjustPastedObjects": true,
-    "XGridUnitSpace": 6,
+    "XGridUnitSpace": 3,
     "BeatSplit": 4,
     "XGridDisplayMaxUnit": 40,
     "EnableXOffset": true,
@@ -21,13 +21,14 @@
     "XOffset": 0,
     "VerticalDisplayScale": 0.75,
     "DisplayTimeFormat": 0,
+    "LoopPlayTiming": false,
     "ShowXOffsetScrollBar": true,
     "MouseWheelLength": 50,
     "IsNotifying": true
   },
   "FumenFilePath": "fumen.ogkr",
   "RememberLastDisplayTime": {
-    "Ticks": 1582973901
+    "Ticks": 645597527
   },
   "StoreBulletPalleteEditorDatas": {
     "A0": {
@@ -424,6 +425,34 @@
     },
     "AS": {
       "Name": "",
+      "AuxiliaryLineColor": {
+        "ColorContext": null,
+        "A": 255,
+        "R": 189,
+        "G": 183,
+        "B": 107,
+        "ScA": 1,
+        "ScR": 0.50888133,
+        "ScG": 0.4735315,
+        "ScB": 0.14702727
+      }
+    },
+    "AT": {
+      "Name": "",
+      "AuxiliaryLineColor": {
+        "ColorContext": null,
+        "A": 255,
+        "R": 189,
+        "G": 183,
+        "B": 107,
+        "ScA": 1,
+        "ScR": 0.50888133,
+        "ScG": 0.4735315,
+        "ScB": 0.14702727
+      }
+    },
+    "AU": {
+      "Name": "L-L",
       "AuxiliaryLineColor": {
         "ColorContext": null,
         "A": 255,

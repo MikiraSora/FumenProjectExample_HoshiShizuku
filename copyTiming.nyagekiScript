@@ -15,7 +15,7 @@ var targetEditor = ScriptArgs.TargetEditor;
 if (targetEditor is null)
 	return;
 
-var lines = File.ReadAllLines(@"F:\SDEZ_1.40\Package\Sinmai_Data\StreamingAssets\A000\music\music011452\011452_03.ma2");
+var lines = File.ReadAllLines(@"C:\Users\mikir\Desktop\音寄谱\Energizing Flame\011618_02.ma2");
 var cmdArgs = new CommandArgs();
 
 TGrid calcTGrid(int measure, int offset)
@@ -64,7 +64,7 @@ foreach (var line in lines)
 				IsCritical = isBreak,
 			};
 
-			hold.SetHold(new HoldEnd()
+			hold.SetHoldEnd(new HoldEnd()
 			{
 				TGrid = to,
 				XGrid = hold.XGrid.CopyNew()
@@ -100,7 +100,7 @@ foreach (var line in lines)
 			};
 			var duration = cmdArgs.GetData<int>(4) * 5;
 
-			hold.SetHold(new HoldEnd()
+			hold.SetHoldEnd(new HoldEnd()
 			{
 				TGrid = hold.TGrid + new GridOffset(0, duration),
 				XGrid = hold.XGrid.CopyNew()

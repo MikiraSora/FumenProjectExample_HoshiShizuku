@@ -11,9 +11,9 @@ using OngekiFumenEditor.Modules.EditorScriptExecutor.Scripts;
 using OngekiFumenEditor.Base.OngekiObjects.Lane.Base;
 using System.Collections.Generic;
 
-var xGridOffset = new GridOffset(12, 0);
+var xGridOffset = new GridOffset(-6, 0);
 var tGridOffset = new GridOffset(0, 0);
-var genLaneType = LaneType.Right;
+var genLaneType = LaneType.Left;
 
 //获取编辑器目标对象
 var targetEditor = ScriptArgs.TargetEditor;
